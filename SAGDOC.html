@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAGDOC — Sistema de Apoio à Gestão Documental Aduaneira</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --azul:#0b3d68;        /* azul institucional */
+    --azul-2:#12558f;
+    --azul-claro:#e8f0f8;
+    --dourado:#c8a34a;     /* faixa DGA */
+    --verde:#1e7e42;
+    --amarelo:#b8860b;
+    --vermelho:#b02a2a;
+    --cinza:#f4f6f9;
+  }
+  body{background:var(--cinza);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#233;}
+  .btn-primary{background:var(--azul);border-color:var(--azul);}
+  .btn-primary:hover{background:var(--azul-2);border-color:var(--azul-2);}
+  .text-azul{color:var(--azul)!important;}
+  .bg-azul{background:var(--azul)!important;}
+  a{color:var(--azul-2);}
+
+  /* ---------- LOGIN ---------- */
+  #view-login{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#0b3d68 0%,#12558f 55%,#1b6bb0 100%);
+    padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:410px;background:#fff;border-radius:14px;
+    box-shadow:0 18px 50px rgba(0,0,0,.35);overflow:hidden;
+  }
+  .login-top{background:var(--azul);color:#fff;text-align:center;padding:30px 24px 22px;}
+  .login-top .brand-badge{
+    width:66px;height:66px;border-radius:50%;background:#fff;color:var(--azul);
+    display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .login-top h1{font-size:26px;font-weight:800;letter-spacing:1px;margin:0;}
+  .login-top small{opacity:.85;font-size:12.5px;}
+  .login-body{padding:26px 30px 30px;}
+  .login-body h5{font-size:16px;font-weight:600;color:#333;margin-bottom:18px;text-align:center;}
+  .form-floating>label{color:#7a8894;}
+  .login-foot{background:#f2f5f8;text-align:center;padding:12px;font-size:11.5px;color:#6a7683;border-top:1px solid #e4e9ef;}
+  .demo-users{font-size:12px;background:var(--azul-claro);border-radius:8px;padding:10px 12px;margin-top:16px;}
+  .demo-users code{cursor:pointer;color:var(--azul);}
+
+  /* ---------- APP SHELL ---------- */
+  .topbar{background:var(--azul);color:#fff;height:56px;display:flex;align-items:center;padding:0 16px;position:fixed;top:0;left:0;right:0;z-index:1030;}
+  .topbar .logo{font-weight:800;letter-spacing:1px;font-size:20px;}
+  .topbar .dga-strip{height:26px;width:5px;background:var(--dourado);margin:0 14px;border-radius:2px;}
+  .sidebar{position:fixed;top:56px;bottom:0;left:0;width:238px;background:#0e2e4d;color:#c9d6e3;padding-top:10px;overflow-y:auto;z-index:1020;transition:transform .25s;}
+  .sidebar .who{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px;}
+  .sidebar .who .nome{color:#fff;font-weight:600;font-size:14px;}
+  .sidebar .who .perfil{font-size:11.5px;color:var(--dourado);text-transform:uppercase;letter-spacing:.5px;}
+  .sidebar a.nav-item{display:flex;align-items:center;gap:11px;color:#c9d6e3;text-decoration:none;padding:11px 18px;font-size:14px;border-left:3px solid transparent;}
+  .sidebar a.nav-item:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .sidebar a.nav-item.active{background:rgba(255,255,255,.1);color:#fff;border-left-color:var(--dourado);}
+  .sidebar a.nav-item i{width:18px;text-align:center;}
+  .content{margin-left:238px;margin-top:56px;padding:24px 28px;}
+  @media(max-width:860px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .content{margin-left:0;}
+  }
+  .page-title{font-size:22px;font-weight:700;color:var(--azul);margin-bottom:2px;}
+  .page-sub{color:#6a7683;font-size:13.5px;margin-bottom:20px;}
+
+  /* stat cards */
+  .stat-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 2px 8px rgba(10,40,70,.07);display:flex;align-items:center;gap:16px;height:100%;}
+  .stat-card .ic{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex:none;}
+  .stat-card .n{font-size:26px;font-weight:700;line-height:1;}
+  .stat-card .l{font-size:12.5px;color:#6a7683;margin-top:3px;}
+
+  .card-soft{background:#fff;border:none;border-radius:12px;box-shadow:0 2px 8px rgba(10,40,70,.07);}
+  .card-soft .card-header{background:#fff;border-bottom:1px solid #eef2f6;font-weight:600;color:var(--azul);border-radius:12px 12px 0 0;}
+
+  table.tbl{font-size:13.5px;}
+  table.tbl thead th{background:var(--azul-claro);color:var(--azul);font-weight:600;border:none;font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;}
+  table.tbl td{vertical-align:middle;}
+
+  /* status badges */
+  .badge-st{font-size:11px;font-weight:600;padding:5px 9px;border-radius:20px;}
+  .st-rascunho{background:#e2e6ea;color:#4a5560;}
+  .st-submetido{background:#dbeafe;color:#1e56a0;}
+  .st-aguardando_distribuicao{background:#e0e7ff;color:#4338ca;}
+  .st-em_verificacao{background:#fef3c7;color:#92600b;}
+  .st-aguardando_documentos{background:#ffe4c4;color:#a15c00;}
+  .st-aprovado_verificador{background:#d1fae5;color:#0b6b3a;}
+  .st-aprovado_final{background:#bbf7d0;color:#166534;}
+  .st-rejeitado{background:#fee2e2;color:#a01818;}
+  .st-cancelado{background:#e5e7eb;color:#6b7280;}
+
+  .sla-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+  .sla-verde{background:var(--verde);}
+  .sla-amarelo{background:var(--amarelo);}
+  .sla-vermelho{background:var(--vermelho);}
+
+  .dropzone{border:2px dashed #b9c6d4;border-radius:12px;padding:34px;text-align:center;color:#7a8894;background:#fafcff;cursor:pointer;transition:.15s;}
+  .dropzone.drag{border-color:var(--azul);background:var(--azul-claro);color:var(--azul);}
+  .checklist-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #eef2f6;border-radius:8px;margin-bottom:8px;font-size:13.5px;}
+  .checklist-item .flag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;}
+  .flag-ob{background:#fee2e2;color:#a01818;}
+  .flag-op{background:#e2e6ea;color:#556;}
+  .doc-ok{color:var(--verde);} .doc-miss{color:#c0392b;}
+
+  .timeline{list-style:none;padding-left:6px;margin:0;}
+  .timeline li{position:relative;padding:0 0 16px 24px;border-left:2px solid #dde5ec;}
+  .timeline li:last-child{border-left-color:transparent;}
+  .timeline li::before{content:"";position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--azul);border:2px solid #fff;}
+  .timeline .t-when{font-size:11.5px;color:#8a97a4;}
+  .timeline .t-what{font-size:13.5px;font-weight:600;color:#2b3a47;}
+  .timeline .t-who{font-size:12px;color:#6a7683;}
+
+  .msg{max-width:78%;padding:9px 13px;border-radius:12px;margin-bottom:10px;font-size:13.5px;}
+  .msg.me{background:var(--azul);color:#fff;margin-left:auto;border-bottom-right-radius:3px;}
+  .msg.them{background:#eef2f6;color:#2b3a47;border-bottom-left-radius:3px;}
+  .msg .meta{font-size:10.5px;opacity:.75;margin-top:3px;}
+
+  .notif-badge{position:absolute;top:6px;right:6px;background:var(--vermelho);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;font-weight:700;}
+  .toast-wrap{position:fixed;top:70px;right:20px;z-index:2000;}
+  .receipt{font-family:"Courier New",monospace;background:#fff;border:1px dashed #aeb9c4;border-radius:8px;padding:16px;font-size:13px;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="view-login">
+  <div class="login-card">
+    <div class="login-top">
+      <div class="brand-badge"><i class="bi bi-shield-lock-fill"></i></div>
+      <h1>SAGDOC</h1>
+      <small>Sistema de Apoio à Gestão Documental Aduaneira</small><br>
+      <small>Direcção-Geral das Alfândegas — Guiné-Bissau</small>
+    </div>
+    <div class="login-body">
+      <h5>Autenticação de Utilizador</h5>
+      <form id="loginForm" autocomplete="off">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="loginUser" placeholder="Utilizador" required>
+          <label><i class="bi bi-person me-1"></i> Utilizador</label>
+        </div>
+        <div class="form-floating mb-3">
+          <input type="password" class="form-control" id="loginPass" placeholder="Senha" required>
+          <label><i class="bi bi-key me-1"></i> Senha</label>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="remember">
+            <label class="form-check-label" for="remember" style="font-size:13px">Manter sessão</label>
+          </div>
+          <a href="#" id="recuperar" style="font-size:13px">Recuperar senha</a>
+        </div>
+        <div id="loginErro" class="alert alert-danger py-2 px-3 d-none" style="font-size:13px"></div>
+        <button class="btn btn-primary w-100 py-2 fw-semibold" type="submit">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+        </button>
+      </form>
+      <div class="demo-users">
+        <b>Perfis de demonstração</b> (senha: <code>demo</code>) — clique para preencher:<br>
+        <code data-u="jbarbosa">jbarbosa</code> · Despachante &nbsp;|&nbsp;
+        <code data-u="averificador">averificador</code> · Verificador<br>
+        <code data-u="chefe">chefe</code> · Chefe de Setor &nbsp;|&nbsp;
+        <code data-u="gestor">gestor</code> · Gestor DGA &nbsp;|&nbsp;
+        <code data-u="admin">admin</code> · Administrador
+      </div>
+    </div>
+    <div class="login-foot">
+      © 2026 DGA — Complemento ao SYDONIA (ASYCUDA) · Acessos registados e auditados (RF05)
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="view-app" class="d-none">
+  <div class="topbar">
+    <button class="btn btn-sm text-white d-md-none me-2" id="hamb"><i class="bi bi-list fs-4"></i></button>
+    <span class="logo">SAGDOC</span>
+    <span class="dga-strip"></span>
+    <span class="d-none d-md-inline" style="font-size:13px;opacity:.85">Gestão Documental Aduaneira · DGA</span>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <div class="position-relative" role="button" id="notifBell" title="Notificações">
+        <i class="bi bi-bell fs-5"></i>
+        <span class="notif-badge d-none" id="notifCount">0</span>
+      </div>
+      <div class="dropdown">
+        <span role="button" data-bs-toggle="dropdown" class="d-flex align-items-center gap-2">
+          <i class="bi bi-person-circle fs-5"></i>
+          <span class="d-none d-md-inline" id="topName" style="font-size:14px"></span>
+          <i class="bi bi-caret-down-fill" style="font-size:11px"></i>
+        </span>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><span class="dropdown-item-text small text-muted" id="topPerfil"></span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#" id="btnLogout"><i class="bi bi-box-arrow-right me-2"></i>Terminar sessão</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="who">
+      <div class="nome" id="sbNome"></div>
+      <div class="perfil" id="sbPerfil"></div>
+    </div>
+    <div id="navItems"></div>
+  </nav>
+
+  <main class="content" id="content"></main>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- Notificações offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="notifPanel">
+  <div class="offcanvas-header bg-azul text-white">
+    <h5 class="offcanvas-title"><i class="bi bi-bell me-2"></i>Notificações</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="notifList"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* =========================================================================
+   SAGDOC — protótipo funcional (client-side)
+   Reproduz o modelo de dados, RBAC, workflow e requisitos da monografia.
+   ========================================================================= */
+
+/* ---------- DADOS DE REFERÊNCIA (conforme tipos_documentos / configuracoes) ---------- */
+const CATEGORIAS = ['Alimentos','Medicamentos','Vegetais','Animais','Químicos','Têxteis','Electrónicos','Veículos','Geral'];
+const REGIMES = ['Importação Definitiva','Reimportação','Trânsito','Admissão Temporária','Entreposto Aduaneiro','Exportação'];
+
+const TIPOS_DOC = [
+  {id:1,nome:'Fatura Comercial',obrig:['*']},
+  {id:2,nome:'Conhecimento de Embarque (B/L)',obrig:['*']},
+  {id:3,nome:'Lista de Embalagem (Packing List)',obrig:['*']},
+  {id:4,nome:'Certificado Sanitário',obrig:['Alimentos','Animais']},
+  {id:5,nome:'Certificado Fitossanitário',obrig:['Vegetais']},
+  {id:6,nome:'Licença de Importação',obrig:['Medicamentos','Químicos','Armas']},
+  {id:7,nome:'Certificado de Origem',obrig:[]},
+];
+
+const CONFIG = { sla_distribuicao_h:4, sla_verificacao_h:48, sla_aprovacao_chefe_h:24, tam_max_mb:10 };
+
+const STATUS_LABEL = {
+  rascunho:'Rascunho', submetido:'Submetido', aguardando_distribuicao:'Aguardando Distribuição',
+  em_verificacao:'Em Verificação', aguardando_documentos:'Aguardando Documentos',
+  aprovado_verificador:'Aprovado p/ Verificador', aprovado_final:'Aprovado Final',
+  rejeitado:'Rejeitado', cancelado:'Cancelado'
+};
+
+/* ---------- "BASE DE DADOS" EM MEMÓRIA ---------- */
+const DB = {
+  usuarios:[
+    {id:1,username:'jbarbosa',nome:'João Barbosa',email:'jbarbosa@dga.gw',perfil:'despachante',extra:{nif:'512334789',licenca:'DESP-2019-042'}},
+    {id:2,username:'mcandé',nome:'Mariama Candé',email:'mcande@dga.gw',perfil:'despachante',extra:{nif:'598112004',licenca:'DESP-2021-118'}},
+    {id:3,username:'averificador',nome:'Aliu Baldé',email:'abalde@dga.gw',perfil:'verificador',extra:{matricula:'VER-204',setor:'Importação'}},
+    {id:4,username:'nverificador',nome:'Nália Gomes',email:'ngomes@dga.gw',perfil:'verificador',extra:{matricula:'VER-207',setor:'Importação'}},
+    {id:5,username:'chefe',nome:'Domingos Có',email:'dco@dga.gw',perfil:'chefe_setor',extra:{setor:'Importação'}},
+    {id:6,username:'gestor',nome:'Fatumata Djaló',email:'fdjalo@dga.gw',perfil:'gestor',extra:{}},
+    {id:7,username:'admin',nome:'Administrador do Sistema',email:'admin@dga.gw',perfil:'administrador',extra:{}},
+  ],
+  importadores:[
+    {id:1,nome:'Bissau Trading Lda',nif:'700112233'},
+    {id:2,nome:'Sahel Import & Export',nif:'700445566'},
+    {id:3,nome:'Farmácia Central SA',nif:'700778899'},
+    {id:4,nome:'AgroCaju Guiné',nif:'700990011'},
+  ],
+  processos:[],
+  documentos:[],
+  historico:[],
+  comunicacoes:[],
+  notificacoes:[],
+  logs:[],
+  seqProc:0, seqDoc:0, seqHist:0, seqCom:0, seqNot:0, seqLog:0, seqImp:4,
+};
+
+/* ---------- MATRIZ DE PERMISSÕES (RBAC — RF03 / secção 4.5) ---------- */
+const PERM = {
+  despachante:   ['dashboard','novo','meus_processos','consulta','notificacoes'],
+  verificador:   ['dashboard','fila','consulta','notificacoes'],
+  chefe_setor:   ['dashboard','distribuicao','aprovacao_final','consulta','relatorios','notificacoes'],
+  gestor:        ['dashboard','consulta','relatorios','notificacoes'],
+  administrador: ['dashboard','utilizadores','tipos_doc','sla','logs','consulta','notificacoes'],
+};
+const NAV = {
+  dashboard:{i:'bi-speedometer2',t:'Painel'},
+  novo:{i:'bi-file-earmark-plus',t:'Novo Processo'},
+  meus_processos:{i:'bi-folder2-open',t:'Meus Processos'},
+  fila:{i:'bi-inbox',t:'Fila de Trabalho'},
+  distribuicao:{i:'bi-diagram-3',t:'Distribuição'},
+  aprovacao_final:{i:'bi-check2-circle',t:'Aprovação Final'},
+  consulta:{i:'bi-search',t:'Consultar Processos'},
+  relatorios:{i:'bi-bar-chart-line',t:'Relatórios & KPIs'},
+  utilizadores:{i:'bi-people',t:'Utilizadores'},
+  tipos_doc:{i:'bi-file-earmark-text',t:'Tipos de Documento'},
+  sla:{i:'bi-sliders',t:'Configuração de SLA'},
+  logs:{i:'bi-shield-check',t:'Logs de Auditoria'},
+  notificacoes:{i:'bi-bell',t:'Notificações'},
+};
+
+/* ---------- ESTADO DE SESSÃO ---------- */
+let SESSAO = null;
+let currentView = 'dashboard';
+let draftProcesso = null; // processo em criação (multi-passo)
+
+/* ---------- UTILITÁRIOS ---------- */
+const $ = s => document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const now = ()=> new Date();
+const fmtDT = d => new Date(d).toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const fmtD  = d => new Date(d).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});
+const horas = (a,b)=> (new Date(b)-new Date(a))/36e5;
+function toast(msg,tipo='primary'){
+  const t=el('div',`toast align-items-center text-white bg-${tipo} border-0 show mb-2`,
+    `<div class="d-flex"><div class="toast-body">${msg}</div>
+     <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`);
+  $('#toastWrap').appendChild(t);
+  setTimeout(()=>t.remove(),4200);
+}
+function userById(id){return DB.usuarios.find(u=>u.id===id);}
+function impById(id){return DB.importadores.find(i=>i.id===id);}
+
+/* ---------- LOG DE AUDITORIA (RF05/RF46) ---------- */
+function log(acao,entidade,idEnt,detalhes){
+  DB.logs.unshift({id:++DB.seqLog,data:now(),usuario_id:SESSAO?SESSAO.id:null,
+    acao,entidade,id_entidade:idEnt,ip:'196.20.'+(10+ (idEnt||0)%40)+'.'+(1+(DB.seqLog%200)),detalhes:detalhes||''});
+}
+
+/* ---------- HISTÓRICO / NOTIFICAÇÕES (RF28/RF30/RF35) ---------- */
+function addHist(proc,acao,st_ant,st_novo,obs){
+  DB.historico.push({id:++DB.seqHist,processo_id:proc.id,usuario_id:SESSAO.id,
+    data:now(),acao,status_anterior:st_ant,status_novo:st_novo,obs:obs||''});
+}
+function notificar(usuario_id,tipo,titulo,mensagem,link){
+  DB.notificacoes.unshift({id:++DB.seqNot,usuario_id,tipo,titulo,mensagem,link,data:now(),lida:false});
+  if(SESSAO && usuario_id===SESSAO.id) refreshNotifBadge();
+}
+function refreshNotifBadge(){
+  const n = DB.notificacoes.filter(x=>x.usuario_id===SESSAO.id && !x.lida).length;
+  const b=$('#notifCount');
+  if(n>0){b.textContent=n;b.classList.remove('d-none');}else{b.classList.add('d-none');}
+}
+
+/* ---------- CHECKLIST DINÂMICO (RF08) ---------- */
+function checklistFor(categoria){
+  return TIPOS_DOC.map(td=>{
+    const ob = td.obrig.includes('*') || td.obrig.includes(categoria);
+    return {tipo_id:td.id,nome:td.nome,obrigatorio:ob};
+  });
+}
+function docsDoProcesso(pid){return DB.documentos.filter(d=>d.processo_id===pid);}
+function checklistStatus(proc){
+  const cl=checklistFor(proc.categoria);
+  const docs=docsDoProcesso(proc.id);
+  return cl.map(c=>({...c, enviado: docs.some(d=>d.tipo_documento_id===c.tipo_id)}));
+}
+function obrigatoriosCompletos(proc){
+  return checklistStatus(proc).filter(c=>c.obrigatorio).every(c=>c.enviado);
+}
+
+/* ---------- SLA (RF26 / RNF) ---------- */
+function slaProcesso(proc){
+  // devolve {cor,label,horas} conforme fase corrente
+  let limite, desde, fase;
+  if(proc.status==='aguardando_distribuicao'){limite=CONFIG.sla_distribuicao_h;desde=proc.data_submissao;fase='Distribuição';}
+  else if(proc.status==='em_verificacao'){limite=CONFIG.sla_verificacao_h;desde=proc.data_distribuicao||proc.data_submissao;fase='Verificação';}
+  else if(proc.status==='aprovado_verificador'){limite=CONFIG.sla_aprovacao_chefe_h;desde=proc.data_aprov_verif;fase='Aprovação Chefe';}
+  else return {cor:'sla-verde',label:'—',fase:'—',h:0,limite:0};
+  const h = horas(desde, now());
+  let cor='sla-verde';
+  if(h>limite) cor='sla-vermelho'; else if(h>limite*0.75) cor='sla-amarelo';
+  return {cor,label:`${h.toFixed(0)}h / ${limite}h`,fase,h,limite};
+}
+
+/* =========================================================================
+   AUTENTICAÇÃO
+   ========================================================================= */
+$('#loginForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const u=$('#loginUser').value.trim(), p=$('#loginPass').value;
+  const user=DB.usuarios.find(x=>x.username===u);
+  const erro=$('#loginErro');
+  if(!user || p!=='demo'){
+    erro.textContent='Credenciais inválidas. Verifique o utilizador e a senha.';
+    erro.classList.remove('d-none');
+    // RF05 — regista tentativa falhada
+    DB.logs.unshift({id:++DB.seqLog,data:now(),usuario_id:user?user.id:null,acao:'LOGIN_FALHA',
+      entidade:'sessao',ip:'196.20.30.'+(DB.seqLog%200),detalhes:'user='+u});
+    return;
+  }
+  erro.classList.add('d-none');
+  SESSAO=user;
+  log('LOGIN_OK','sessao',user.id,'perfil='+user.perfil);
+  iniciarApp();
+});
+document.querySelectorAll('.demo-users code').forEach(c=>{
+  c.addEventListener('click',()=>{ $('#loginUser').value=c.dataset.u; $('#loginPass').value='demo'; });
+});
+$('#recuperar').addEventListener('click',e=>{e.preventDefault();
+  toast('Enviámos um link temporário de redefinição para o seu email (RF04).','info');});
+$('#btnLogout').addEventListener('click',e=>{e.preventDefault();
+  log('LOGOUT','sessao',SESSAO.id); SESSAO=null;
+  $('#view-app').classList.add('d-none'); $('#view-login').style.display='flex';
+  $('#loginForm').reset();
+});
+
+/* ---------- ARRANQUE DA APP ---------- */
+function iniciarApp(){
+  $('#view-login').style.display='none';
+  $('#view-app').classList.remove('d-none');
+  $('#sbNome').textContent=SESSAO.nome;
+  $('#sbPerfil').textContent=perfilLabel(SESSAO.perfil);
+  $('#topName').textContent=SESSAO.nome.split(' ')[0];
+  $('#topPerfil').textContent=perfilLabel(SESSAO.perfil);
+  buildNav();
+  refreshNotifBadge();
+  navigate('dashboard');
+}
+function perfilLabel(p){return{despachante:'Despachante',verificador:'Verificador Aduaneiro',
+  chefe_setor:'Chefe de Setor',gestor:'Gestor DGA',administrador:'Administrador'}[p]||p;}
+
+function buildNav(){
+  const wrap=$('#navItems'); wrap.innerHTML='';
+  PERM[SESSAO.perfil].forEach(key=>{
+    const n=NAV[key];
+    const a=el('a','nav-item',`<i class="bi ${n.i}"></i><span>${n.t}</span>`);
+    a.href='#'; a.dataset.view=key;
+    a.addEventListener('click',ev=>{ev.preventDefault();navigate(key);});
+    wrap.appendChild(a);
+  });
+}
+$('#hamb').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
+$('#notifBell').addEventListener('click',()=>{renderNotifPanel();
+  new bootstrap.Offcanvas('#notifPanel').show();});
+
+function navigate(view){
+  currentView=view;
+  document.querySelectorAll('.sidebar .nav-item').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
+  $('#sidebar').classList.remove('open');
+  const c=$('#content'); c.innerHTML='';
+  ({dashboard:renderDashboard,novo:renderNovoProcesso,meus_processos:renderMeusProcessos,
+    fila:renderFila,distribuicao:renderDistribuicao,aprovacao_final:renderAprovacaoFinal,
+    consulta:renderConsulta,relatorios:renderRelatorios,utilizadores:renderUtilizadores,
+    tipos_doc:renderTiposDoc,sla:renderSLA,logs:renderLogs,notificacoes:renderNotificacoesPage
+  }[view]||renderDashboard)(c);
+}
+
+/* =========================================================================
+   COMPONENTES REUTILIZÁVEIS
+   ========================================================================= */
+function pageHead(c,titulo,sub){
+  c.appendChild(el('div','',`<div class="page-title">${titulo}</div><div class="page-sub">${sub||''}</div>`));
+}
+function badgeStatus(st){return `<span class="badge-st st-${st}">${STATUS_LABEL[st]}</span>`;}
+function statCard(ic,cor,n,l){
+  return `<div class="stat-card"><div class="ic" style="background:${cor}"><i class="bi ${ic}"></i></div>
+    <div><div class="n">${n}</div><div class="l">${l}</div></div></div>`;
+}
+function procRow(p,acoes){
+  const imp=impById(p.importador_id), desp=userById(p.despachante_id);
+  const sla=slaProcesso(p);
+  return `<tr>
+    <td><b>${p.numero_du}</b></td>
+    <td>${imp?imp.nome:'—'}</td>
+    <td>${p.categoria}</td>
+    <td class="d-none d-lg-table-cell">${desp?desp.nome:'—'}</td>
+    <td>${badgeStatus(p.status)}</td>
+    <td class="d-none d-md-table-cell"><span class="sla-dot ${sla.cor}"></span><small>${sla.label}</small></td>
+    <td class="text-end">${acoes||`<button class="btn btn-sm btn-outline-primary" onclick="abrirProcesso(${p.id})"><i class="bi bi-eye"></i></button>`}</td>
+  </tr>`;
+}
+function tabelaProcessos(lista,acoesFn){
+  if(!lista.length) return `<div class="text-center text-muted py-5"><i class="bi bi-folder2 fs-1 d-block mb-2 opacity-50"></i>Sem processos para apresentar.</div>`;
+  return `<div class="table-responsive"><table class="table tbl align-middle mb-0">
+    <thead><tr><th>Nº DU</th><th>Importador</th><th>Categoria</th>
+      <th class="d-none d-lg-table-cell">Despachante</th><th>Estado</th>
+      <th class="d-none d-md-table-cell">SLA</th><th class="text-end">Ações</th></tr></thead>
+    <tbody>${lista.map(p=>procRow(p,acoesFn?acoesFn(p):null)).join('')}</tbody></table></div>`;
+}
+
+/* =========================================================================
+   DASHBOARDS (RF36–RF39)
+   ========================================================================= */
+function renderDashboard(c){
+  const p=SESSAO.perfil;
+  if(p==='despachante') return dashDespachante(c);
+  if(p==='verificador') return dashVerificador(c);
+  if(p==='chefe_setor') return dashChefe(c);
+  return dashGerencial(c); // gestor / admin
+}
+
+function dashDespachante(c){
+  pageHead(c,'Painel do Despachante','Resumo dos seus processos documentais · '+SESSAO.nome);
+  const meus=DB.processos.filter(p=>p.despachante_id===SESSAO.id);
+  const ativos=meus.filter(p=>!['aprovado_final','cancelado','rejeitado'].includes(p.status));
+  const aguardando=meus.filter(p=>['aguardando_documentos','rejeitado'].includes(p.status));
+  const aprovados=meus.filter(p=>p.status==='aprovado_final');
+  const row=el('div','row g-3 mb-4');
+  row.innerHTML=`
+    <div class="col-6 col-lg-3">${statCard('bi-folder2-open','#12558f',ativos.length,'Processos ativos')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-exclamation-triangle','#b8860b',aguardando.length,'Aguardam a sua ação')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-check2-circle','#1e7e42',aprovados.length,'Aprovados')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-files','#0b3d68',meus.length,'Total submetidos')}</div>`;
+  c.appendChild(row);
+
+  if(aguardando.length){
+    const al=el('div','alert alert-warning d-flex align-items-center gap-2 mb-4',
+      `<i class="bi bi-bell-fill"></i><div>Tem <b>${aguardando.length}</b> processo(s) que aguardam a sua ação (documentos adicionais ou correções).</div>`);
+    c.appendChild(al);
+  }
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-header d-flex justify-content-between align-items-center">
+     Processos recentes
+     <button class="btn btn-sm btn-primary" onclick="navigate('novo')"><i class="bi bi-plus-lg"></i> Novo Processo</button></div>
+    <div class="card-body p-0">${tabelaProcessos(meus.slice().reverse().slice(0,8))}</div>`;
+  c.appendChild(card);
+}
+
+function dashVerificador(c){
+  pageHead(c,'Painel do Verificador','Fila de trabalho e desempenho · '+SESSAO.nome);
+  const fila=DB.processos.filter(p=>p.verificador_id===SESSAO.id && p.status==='em_verificacao');
+  const atrasados=fila.filter(p=>slaProcesso(p).cor==='sla-vermelho');
+  const feitos=DB.processos.filter(p=>p.verificador_id===SESSAO.id && ['aprovado_verificador','aprovado_final'].includes(p.status));
+  const tempos=feitos.filter(p=>p.data_aprov_verif).map(p=>horas(p.data_distribuicao||p.data_submissao,p.data_aprov_verif));
+  const media=tempos.length?(tempos.reduce((a,b)=>a+b,0)/tempos.length).toFixed(1):'0';
+  const row=el('div','row g-3 mb-4');
+  row.innerHTML=`
+    <div class="col-6 col-lg-3">${statCard('bi-inbox','#12558f',fila.length,'Na fila')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-stopwatch','#0b3d68',media+'h','Tempo médio verificação')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-exclamation-octagon','#b02a2a',atrasados.length,'SLA ultrapassado')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-check2-all','#1e7e42',feitos.length,'Processos concluídos')}</div>`;
+  c.appendChild(row);
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-header">A minha fila (FIFO por data de submissão)</div>
+    <div class="card-body p-0">${tabelaProcessos(fila.sort((a,b)=>new Date(a.data_submissao)-new Date(b.data_submissao)),
+      p=>`<button class="btn btn-sm btn-primary" onclick="abrirProcesso(${p.id})"><i class="bi bi-clipboard-check"></i> Analisar</button>`)}</div>`;
+  c.appendChild(card);
+}
+
+function dashChefe(c){
+  pageHead(c,'Painel do Chefe de Setor','Distribuição, carga de trabalho e aprovações · '+SESSAO.nome);
+  const aguardDist=DB.processos.filter(p=>p.status==='aguardando_distribuicao');
+  const aguardAprov=DB.processos.filter(p=>p.status==='aprovado_verificador');
+  const verifs=DB.usuarios.filter(u=>u.perfil==='verificador');
+  const row=el('div','row g-3 mb-4');
+  row.innerHTML=`
+    <div class="col-6 col-lg-3">${statCard('bi-diagram-3','#12558f',aguardDist.length,'Aguardam distribuição')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-check2-circle','#b8860b',aguardAprov.length,'Aguardam aprovação final')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-people','#0b3d68',verifs.length,'Verificadores')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-files','#1e7e42',DB.processos.length,'Processos totais')}</div>`;
+  c.appendChild(row);
+
+  // carga por verificador
+  const cargaCard=el('div','card-soft card mb-4');
+  let rows=verifs.map(v=>{
+    const n=DB.processos.filter(p=>p.verificador_id===v.id && p.status==='em_verificacao').length;
+    return `<tr><td>${v.nome}</td><td>${v.extra.matricula}</td>
+      <td><div class="progress" style="height:16px"><div class="progress-bar bg-azul" style="width:${Math.min(n*20,100)}%">${n}</div></div></td></tr>`;
+  }).join('');
+  cargaCard.innerHTML=`<div class="card-header">Carga de trabalho por verificador</div>
+    <div class="card-body p-0"><table class="table tbl mb-0"><thead><tr><th>Verificador</th><th>Matrícula</th><th>Processos em verificação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  c.appendChild(cargaCard);
+
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-header">Processos a aguardar distribuição</div>
+    <div class="card-body p-0">${tabelaProcessos(aguardDist,
+      p=>`<button class="btn btn-sm btn-primary" onclick="navigate('distribuicao')"><i class="bi bi-arrow-right"></i> Distribuir</button>`)}</div>`;
+  c.appendChild(card);
+}
+
+function dashGerencial(c){
+  pageHead(c,'Painel Gerencial (DGA)','Indicadores globais de tramitação documental');
+  const P=DB.processos;
+  const total=P.length;
+  const aprov=P.filter(p=>p.status==='aprovado_final').length;
+  const rej=P.filter(p=>p.status==='rejeitado').length;
+  const conc=P.filter(p=>p.data_aprov_final).map(p=>horas(p.data_submissao,p.data_aprov_final));
+  const mediaTram=conc.length?(conc.reduce((a,b)=>a+b,0)/conc.length).toFixed(1):'0';
+  const taxaAprov=total?((aprov/total)*100).toFixed(0):0;
+  const row=el('div','row g-3 mb-4');
+  row.innerHTML=`
+    <div class="col-6 col-lg-3">${statCard('bi-files','#12558f',total,'Volume total')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-stopwatch','#0b3d68',mediaTram+'h','Tempo médio tramitação')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-hand-thumbs-up','#1e7e42',taxaAprov+'%','Taxa de aprovação')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-hand-thumbs-down','#b02a2a',rej,'Rejeições')}</div>`;
+  c.appendChild(row);
+
+  const gr=el('div','row g-3');
+  gr.innerHTML=`
+    <div class="col-lg-7"><div class="card-soft card h-100"><div class="card-header">Processos por estado</div>
+      <div class="card-body"><canvas id="chStatus" height="150"></canvas></div></div></div>
+    <div class="col-lg-5"><div class="card-soft card h-100"><div class="card-header">Aprovação vs. Rejeição</div>
+      <div class="card-body"><canvas id="chAprov" height="150"></canvas></div></div></div>`;
+  c.appendChild(gr);
+
+  setTimeout(()=>{
+    const cont={}; Object.keys(STATUS_LABEL).forEach(k=>cont[k]=0);
+    P.forEach(p=>cont[p.status]++);
+    const labels=Object.keys(cont).filter(k=>cont[k]>0);
+    new Chart($('#chStatus'),{type:'bar',data:{labels:labels.map(k=>STATUS_LABEL[k]),
+      datasets:[{data:labels.map(k=>cont[k]),backgroundColor:'#12558f'}]},
+      options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+    new Chart($('#chAprov'),{type:'doughnut',data:{labels:['Aprovados','Rejeitados','Em curso'],
+      datasets:[{data:[aprov,rej,total-aprov-rej],backgroundColor:['#1e7e42','#b02a2a','#c8a34a']}]}});
+  },50);
+}
+
+/* =========================================================================
+   NOVO PROCESSO (RF06–RF14, UC02) — formulário + checklist + upload
+   ========================================================================= */
+function renderNovoProcesso(c){
+  pageHead(c,'Novo Processo Documental','Registe um processo associado a uma DU do SYDONIA (ASYCUDA)');
+  draftProcesso=null;
+  const wrap=el('div','row g-4');
+  wrap.innerHTML=`
+   <div class="col-lg-7">
+    <div class="card-soft card">
+     <div class="card-header"><i class="bi bi-file-earmark-plus me-2"></i>Dados do Processo</div>
+     <div class="card-body">
+      <form id="formNovo" autocomplete="off">
+       <div class="mb-3">
+         <label class="form-label">Número da DU (SYDONIA) <span class="text-danger">*</span></label>
+         <input class="form-control" id="npDU" placeholder="ex: 2025/001234" required>
+         <div class="form-text">Formato: AAAA/NNNNNN — a DU deve estar registada e paga no SYDONIA.</div>
+         <div class="invalid-feedback" id="npDUerr"></div>
+       </div>
+       <div class="mb-3">
+         <label class="form-label">Importador <span class="text-danger">*</span></label>
+         <select class="form-select" id="npImp" required>
+           <option value="">— Selecione —</option>
+           ${DB.importadores.map(i=>`<option value="${i.id}">${i.nome} (NIF ${i.nif})</option>`).join('')}
+           <option value="novo">+ Registar novo importador…</option>
+         </select>
+       </div>
+       <div id="npNovoImp" class="row g-2 mb-3 d-none">
+         <div class="col-8"><input class="form-control" id="npImpNome" placeholder="Nome do importador"></div>
+         <div class="col-4"><input class="form-control" id="npImpNif" placeholder="NIF"></div>
+       </div>
+       <div class="row g-3">
+         <div class="col-md-6 mb-3">
+           <label class="form-label">Categoria de mercadoria <span class="text-danger">*</span></label>
+           <select class="form-select" id="npCat" required>
+             <option value="">— Selecione —</option>
+             ${CATEGORIAS.map(x=>`<option>${x}</option>`).join('')}
+           </select>
+         </div>
+         <div class="col-md-6 mb-3">
+           <label class="form-label">Regime de despacho <span class="text-danger">*</span></label>
+           <select class="form-select" id="npReg" required>
+             <option value="">— Selecione —</option>
+             ${REGIMES.map(x=>`<option>${x}</option>`).join('')}
+           </select>
+         </div>
+       </div>
+       <div class="mb-3">
+         <label class="form-label">Observações (opcional)</label>
+         <textarea class="form-control" id="npObs" rows="2"></textarea>
+       </div>
+       <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-right-circle me-1"></i> Criar e anexar documentos</button>
+      </form>
+     </div>
+    </div>
+   </div>
+   <div class="col-lg-5">
+    <div class="card-soft card">
+     <div class="card-header"><i class="bi bi-list-check me-2"></i>Checklist de documentos</div>
+     <div class="card-body">
+       <p class="text-muted small mb-2">Selecione a categoria para gerar automaticamente a lista de documentos obrigatórios (RF08).</p>
+       <div id="npChecklist"><div class="text-muted small py-4 text-center">Aguardando categoria…</div></div>
+     </div>
+    </div>
+   </div>`;
+  c.appendChild(wrap);
+
+  $('#npImp').addEventListener('change',e=>{
+    $('#npNovoImp').classList.toggle('d-none',e.target.value!=='novo');
+  });
+  $('#npCat').addEventListener('change',e=>renderChecklistPreview(e.target.value));
+  $('#npDU').addEventListener('input',e=>{e.target.classList.remove('is-invalid');});
+
+  $('#formNovo').addEventListener('submit',ev=>{
+    ev.preventDefault();
+    const du=$('#npDU').value.trim();
+    if(!/^20\d{2}\/\d{6}$/.test(du)){ // RF07
+      $('#npDU').classList.add('is-invalid'); $('#npDUerr').textContent='Formato inválido. Use AAAA/NNNNNN (ex: 2025/001234).'; return;
+    }
+    if(DB.processos.some(p=>p.numero_du===du)){ // UC02 4b
+      $('#npDU').classList.add('is-invalid'); $('#npDUerr').textContent='Já existe um processo associado a esta DU.'; return;
+    }
+    let impId=$('#npImp').value;
+    if(impId==='novo'){
+      const nome=$('#npImpNome').value.trim(), nif=$('#npImpNif').value.trim();
+      if(!nome||!nif){toast('Preencha nome e NIF do novo importador.','danger');return;}
+      const novo={id:++DB.seqImp,nome,nif}; DB.importadores.push(novo); impId=novo.id;
+    } else impId=parseInt(impId);
+    const proc={
+      id:++DB.seqProc, numero_du:du, despachante_id:SESSAO.id, importador_id:impId,
+      categoria:$('#npCat').value, regime:$('#npReg').value, observacoes:$('#npObs').value.trim(),
+      status:'rascunho', verificador_id:null, data_criacao:now(),
+      data_submissao:null,data_distribuicao:null,data_aprov_verif:null,data_aprov_final:null,
+      parecer:null, motivo_rejeicao:null,
+    };
+    DB.processos.push(proc);
+    addHist(proc,'Processo criado (rascunho)',null,'rascunho');
+    log('PROC_CRIAR','processo',proc.id,'DU '+du);
+    draftProcesso=proc;
+    toast('Processo criado em rascunho. Anexe os documentos obrigatórios.','success');
+    abrirProcesso(proc.id); // vai para o detalhe com upload
+  });
+}
+function renderChecklistPreview(cat){
+  const box=$('#npChecklist');
+  if(!cat){box.innerHTML='<div class="text-muted small py-4 text-center">Aguardando categoria…</div>';return;}
+  box.innerHTML=checklistFor(cat).map(c=>`
+    <div class="checklist-item">
+      <i class="bi bi-file-earmark-text text-azul"></i>
+      <span class="flex-grow-1">${c.nome}</span>
+      <span class="flag ${c.obrigatorio?'flag-ob':'flag-op'}">${c.obrigatorio?'Obrigatório':'Opcional'}</span>
+    </div>`).join('');
+}
+
+/* =========================================================================
+   LISTAS POR PERFIL
+   ========================================================================= */
+function renderMeusProcessos(c){
+  pageHead(c,'Meus Processos','Todos os processos que criou');
+  const meus=DB.processos.filter(p=>p.despachante_id===SESSAO.id).reverse();
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-body p-0">${tabelaProcessos(meus)}</div>`;
+  c.appendChild(card);
+}
+function renderFila(c){
+  pageHead(c,'Fila de Trabalho','Processos atribuídos a si, por ordem de submissão (FIFO)');
+  const fila=DB.processos.filter(p=>p.verificador_id===SESSAO.id && ['em_verificacao','aguardando_documentos'].includes(p.status))
+    .sort((a,b)=>new Date(a.data_submissao)-new Date(b.data_submissao));
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-body p-0">${tabelaProcessos(fila,
+    p=>`<button class="btn btn-sm btn-primary" onclick="abrirProcesso(${p.id})"><i class="bi bi-clipboard-check"></i> Analisar</button>`)}</div>`;
+  c.appendChild(card);
+}
+
+/* ---------- DISTRIBUIÇÃO (RF15/RF16) ---------- */
+function renderDistribuicao(c){
+  pageHead(c,'Distribuição de Processos','Atribua processos submetidos aos verificadores (automático ou manual)');
+  const lista=DB.processos.filter(p=>p.status==='aguardando_distribuicao');
+  const verifs=DB.usuarios.filter(u=>u.perfil==='verificador');
+  const card=el('div','card-soft card');
+  if(!lista.length){card.innerHTML=`<div class="card-body text-center text-muted py-5">Nenhum processo a aguardar distribuição.</div>`;c.appendChild(card);return;}
+  card.innerHTML=`<div class="card-header d-flex justify-content-between align-items-center">
+      Processos aguardando distribuição
+      <button class="btn btn-sm btn-outline-primary" id="btnAuto"><i class="bi bi-lightning-charge"></i> Distribuir todos (automático)</button></div>
+    <div class="card-body p-0"><table class="table tbl mb-0">
+     <thead><tr><th>Nº DU</th><th>Importador</th><th>Categoria</th><th>Atribuir a</th><th></th></tr></thead>
+     <tbody>${lista.map(p=>{const imp=impById(p.importador_id);return `<tr>
+        <td><b>${p.numero_du}</b></td><td>${imp.nome}</td><td>${p.categoria}</td>
+        <td><select class="form-select form-select-sm" id="dist${p.id}">
+          ${verifs.map(v=>{const n=DB.processos.filter(x=>x.verificador_id===v.id&&x.status==='em_verificacao').length;
+            return `<option value="${v.id}">${v.nome} (${n} na fila)</option>`;}).join('')}</select></td>
+        <td class="text-end"><button class="btn btn-sm btn-primary" onclick="distribuir(${p.id})">Atribuir</button></td>
+       </tr>`;}).join('')}</tbody></table></div>`;
+  c.appendChild(card);
+  $('#btnAuto').addEventListener('click',()=>{
+    lista.slice().forEach(p=>{
+      // balanceamento: verificador com menos processos
+      const alvo=verifs.map(v=>({v,n:DB.processos.filter(x=>x.verificador_id===v.id&&x.status==='em_verificacao').length}))
+        .sort((a,b)=>a.n-b.n)[0].v;
+      atribuir(p,alvo.id,'automática');
+    });
+    toast('Distribuição automática concluída (balanceamento de carga — RF15).','success');
+    renderDistribuicao(c);
+  });
+}
+function distribuir(pid){
+  const p=DB.processos.find(x=>x.id===pid);
+  const vid=parseInt($('#dist'+pid).value);
+  atribuir(p,vid,'manual (Chefe de Setor)');
+  toast('Processo '+p.numero_du+' atribuído.','success');
+  navigate('distribuicao');
+}
+function atribuir(p,vid,modo){
+  const v=userById(vid);
+  p.verificador_id=vid; p.status='em_verificacao'; p.data_distribuicao=now();
+  addHist(p,`Distribuído a ${v.nome} (${modo})`,'aguardando_distribuicao','em_verificacao');
+  log('PROC_DISTRIBUIR','processo',p.id,'verificador='+v.nome);
+  notificar(vid,'atribuicao','Novo processo na sua fila',
+    `O processo ${p.numero_du} foi-lhe atribuído para verificação.`, p.id);
+}
+
+/* ---------- APROVAÇÃO FINAL (RF25) ---------- */
+function renderAprovacaoFinal(c){
+  pageHead(c,'Aprovação Final','Reveja os pareceres dos verificadores e conceda a aprovação final');
+  const lista=DB.processos.filter(p=>p.status==='aprovado_verificador');
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-body p-0">${tabelaProcessos(lista,
+    p=>`<button class="btn btn-sm btn-success" onclick="abrirProcesso(${p.id})"><i class="bi bi-check2-circle"></i> Rever</button>`)}</div>`;
+  c.appendChild(card);
+}
+
+/* =========================================================================
+   CONSULTA & PESQUISA (RF31–RF35)
+   ========================================================================= */
+function renderConsulta(c){
+  pageHead(c,'Consultar Processos','Pesquise e filtre processos por DU, importador, estado, período');
+  const filtros=el('div','card-soft card mb-3');
+  filtros.innerHTML=`<div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-3"><input class="form-control form-control-sm" id="fDU" placeholder="Nº DU"></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" id="fImp" placeholder="Importador"></div>
+      <div class="col-md-3"><select class="form-select form-select-sm" id="fSt">
+        <option value="">Todos os estados</option>
+        ${Object.keys(STATUS_LABEL).map(k=>`<option value="${k}">${STATUS_LABEL[k]}</option>`).join('')}</select></div>
+      <div class="col-md-3"><select class="form-select form-select-sm" id="fCat">
+        <option value="">Todas as categorias</option>${CATEGORIAS.map(x=>`<option>${x}</option>`).join('')}</select></div>
+    </div></div>`;
+  c.appendChild(filtros);
+  const out=el('div','card-soft card'); out.innerHTML='<div class="card-body p-0" id="consultaOut"></div>';
+  c.appendChild(out);
+  const run=()=>{
+    let L=DB.processos.slice();
+    // escopo por perfil
+    if(SESSAO.perfil==='despachante') L=L.filter(p=>p.despachante_id===SESSAO.id);
+    if(SESSAO.perfil==='verificador') L=L.filter(p=>p.verificador_id===SESSAO.id);
+    const du=$('#fDU').value.trim().toLowerCase(), imp=$('#fImp').value.trim().toLowerCase(),
+          st=$('#fSt').value, cat=$('#fCat').value;
+    L=L.filter(p=>{
+      const im=impById(p.importador_id);
+      return (!du||p.numero_du.toLowerCase().includes(du))
+        && (!imp||(im&&im.nome.toLowerCase().includes(imp)))
+        && (!st||p.status===st) && (!cat||p.categoria===cat);
+    }).reverse();
+    $('#consultaOut').innerHTML=tabelaProcessos(L);
+  };
+  ['fDU','fImp'].forEach(id=>$('#'+id).addEventListener('input',run));
+  ['fSt','fCat'].forEach(id=>$('#'+id).addEventListener('change',run));
+  run();
+}
+
+/* =========================================================================
+   DETALHE DO PROCESSO (RF11/RF18/RF33/RF35 + ações por perfil)
+   ========================================================================= */
+function abrirProcesso(pid){
+  const p=DB.processos.find(x=>x.id===pid); if(!p)return;
+  log('PROC_ABRIR','processo',p.id);
+  const c=$('#content'); c.innerHTML='';
+  const imp=impById(p.importador_id), desp=userById(p.despachante_id), verif=p.verificador_id?userById(p.verificador_id):null;
+  const sla=slaProcesso(p);
+
+  pageHead(c,'Processo '+p.numero_du,'');
+  const back=el('a','btn btn-sm btn-outline-secondary mb-3','<i class="bi bi-arrow-left"></i> Voltar');
+  back.href='#'; back.onclick=e=>{e.preventDefault();navigate(currentView);}; c.appendChild(back);
+
+  const grid=el('div','row g-4');
+  grid.innerHTML=`
+   <div class="col-lg-7">
+     <div class="card-soft card mb-4">
+       <div class="card-header d-flex justify-content-between align-items-center">
+         <span>Dados do Processo</span> ${badgeStatus(p.status)}</div>
+       <div class="card-body">
+         <div class="row g-2" style="font-size:14px">
+           <div class="col-6"><small class="text-muted d-block">Nº DU (SYDONIA)</small><b>${p.numero_du}</b></div>
+           <div class="col-6"><small class="text-muted d-block">Categoria</small><b>${p.categoria}</b></div>
+           <div class="col-6"><small class="text-muted d-block">Importador</small><b>${imp.nome}</b><br><small>NIF ${imp.nif}</small></div>
+           <div class="col-6"><small class="text-muted d-block">Regime</small><b>${p.regime}</b></div>
+           <div class="col-6"><small class="text-muted d-block">Despachante</small><b>${desp.nome}</b></div>
+           <div class="col-6"><small class="text-muted d-block">Verificador</small><b>${verif?verif.nome:'—'}</b></div>
+           <div class="col-6"><small class="text-muted d-block">Criado em</small>${fmtDT(p.data_criacao)}</div>
+           <div class="col-6"><small class="text-muted d-block">SLA (${sla.fase})</small><span class="sla-dot ${sla.cor}"></span>${sla.label}</div>
+         </div>
+         ${p.observacoes?`<div class="mt-2"><small class="text-muted d-block">Observações</small>${p.observacoes}</div>`:''}
+         ${p.parecer?`<div class="alert alert-success mt-3 mb-0 py-2"><b>Parecer do verificador:</b><br>${p.parecer}</div>`:''}
+         ${p.motivo_rejeicao?`<div class="alert alert-danger mt-3 mb-0 py-2"><b>Motivo de rejeição / documentos pedidos:</b><br>${p.motivo_rejeicao}</div>`:''}
+       </div>
+     </div>
+
+     <div class="card-soft card mb-4">
+       <div class="card-header"><i class="bi bi-paperclip me-2"></i>Documentos & Checklist</div>
+       <div class="card-body" id="docsBox"></div>
+     </div>
+
+     <div class="card-soft card">
+       <div class="card-header"><i class="bi bi-chat-dots me-2"></i>Comunicações (RF27)</div>
+       <div class="card-body">
+         <div id="chatBox" style="max-height:240px;overflow-y:auto"></div>
+         ${podeComunicar(p)?`<div class="input-group mt-2">
+           <input class="form-control" id="chatMsg" placeholder="Escrever mensagem…">
+           <button class="btn btn-primary" onclick="enviarMsg(${p.id})"><i class="bi bi-send"></i></button></div>`:''}
+       </div>
+     </div>
+   </div>
+
+   <div class="col-lg-5">
+     <div class="card-soft card mb-4">
+       <div class="card-header"><i class="bi bi-gear me-2"></i>Ações</div>
+       <div class="card-body" id="acoesBox"></div>
+     </div>
+     <div class="card-soft card">
+       <div class="card-header"><i class="bi bi-clock-history me-2"></i>Histórico de Tramitação (RF35)</div>
+       <div class="card-body"><ul class="timeline" id="timeline"></ul></div>
+     </div>
+   </div>`;
+  c.appendChild(grid);
+
+  renderDocsBox(p);
+  renderChat(p);
+  renderAcoes(p);
+  renderTimeline(p);
+}
+
+function renderDocsBox(p){
+  const box=$('#docsBox');
+  const cl=checklistStatus(p);
+  const isDono = SESSAO.id===p.despachante_id;
+  const podeUpload = isDono && ['rascunho','aguardando_documentos','rejeitado'].includes(p.status);
+
+  let html = cl.map(c=>{
+    const docs=docsDoProcesso(p.id).filter(d=>d.tipo_documento_id===c.tipo_id);
+    return `<div class="checklist-item">
+      <i class="bi ${c.enviado?'bi-check-circle-fill doc-ok':'bi-circle doc-miss'}"></i>
+      <div class="flex-grow-1">
+        <div>${c.nome} <span class="flag ${c.obrigatorio?'flag-ob':'flag-op'}">${c.obrigatorio?'Obrigatório':'Opcional'}</span></div>
+        ${docs.map(d=>`<small class="text-muted d-block"><i class="bi bi-file-earmark"></i> ${d.nome_arquivo}
+           <a href="#" onclick="preview('${d.nome_arquivo}');return false" class="ms-1">pré-visualizar</a>
+           ${podeUpload?`<a href="#" onclick="removerDoc(${d.id},${p.id});return false" class="text-danger ms-1">remover</a>`:''}
+           ${(SESSAO.perfil==='verificador')?`<a href="#" onclick="marcarVerif(${d.id},${p.id});return false" class="ms-1">${d.verificado?'✔ verificado':'marcar verificado'}</a>`:''}
+         </small>`).join('')}
+      </div>
+      ${podeUpload?`<button class="btn btn-sm btn-outline-primary" onclick="fakeUpload(${p.id},${c.tipo_id})"><i class="bi bi-upload"></i></button>`:''}
+    </div>`;
+  }).join('');
+
+  if(podeUpload){
+    html += `<div class="dropzone mt-2" id="dz${p.id}">
+       <i class="bi bi-cloud-arrow-up fs-2 d-block mb-1"></i>
+       Arraste ficheiros aqui ou clique para carregar<br>
+       <small>PDF, JPG, PNG — máx. ${CONFIG.tam_max_mb}MB por ficheiro (RF09)</small></div>`;
+  }
+  box.innerHTML=html;
+
+  if(podeUpload){
+    const dz=$('#dz'+p.id);
+    dz.addEventListener('click',()=>fakeUpload(p.id,null));
+    ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+    ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+    dz.addEventListener('drop',()=>fakeUpload(p.id,null));
+  }
+}
+
+/* Simulação de upload com barra de progresso (RNF02) */
+function fakeUpload(pid,tipoId){
+  const p=DB.processos.find(x=>x.id===pid);
+  const cl=checklistFor(p.categoria);
+  let tipo = tipoId ? cl.find(c=>c.tipo_id===tipoId) : null;
+  if(!tipo){ // escolher tipo em falta
+    const falta=checklistStatus(p).find(c=>!c.enviado)|| cl[0];
+    tipo=falta;
+  }
+  const nome=`${tipo.nome.replace(/[^\wÀ-ú]+/g,'_')}_${p.numero_du.replace('/','-')}.pdf`;
+  // toast com progresso
+  const t=el('div','toast align-items-center bg-white border show mb-2',
+    `<div class="p-2" style="min-width:250px"><small><i class="bi bi-file-earmark-arrow-up me-1"></i>${nome}</small>
+     <div class="progress mt-1" style="height:6px"><div class="progress-bar bg-azul" id="pbar" style="width:0%"></div></div></div>`);
+  $('#toastWrap').appendChild(t);
+  let w=0; const iv=setInterval(()=>{w+=20;t.querySelector('#pbar').style.width=w+'%';
+    if(w>=100){clearInterval(iv);setTimeout(()=>t.remove(),400);
+      const doc={id:++DB.seqDoc,processo_id:p.id,tipo_documento_id:tipo.tipo_id,
+        nome_arquivo:nome,tamanho_bytes:1024*(200+Math.floor(Math.random()*800)),
+        hash:'sha256:'+Math.random().toString(16).slice(2,10),data_upload:now(),upload_por:SESSAO.id,verificado:false};
+      DB.documentos.push(doc);
+      addHist(p,`Documento anexado: ${tipo.nome}`,p.status,p.status);
+      log('DOC_UPLOAD','documento',doc.id,nome);
+      renderDocsBox(p); renderAcoes(p); renderTimeline(p);
+    }},120);
+}
+function removerDoc(did,pid){
+  const p=DB.processos.find(x=>x.id===pid);
+  const d=DB.documentos.find(x=>x.id===did);
+  DB.documentos=DB.documentos.filter(x=>x.id!==did);
+  addHist(p,`Documento removido: ${d.nome_arquivo}`,p.status,p.status);
+  renderDocsBox(p); renderAcoes(p);
+}
+function marcarVerif(did,pid){
+  const d=DB.documentos.find(x=>x.id===did); d.verificado=!d.verificado;
+  renderDocsBox(DB.processos.find(x=>x.id===pid));
+}
+function preview(nome){
+  toast('Pré-visualização de <b>'+nome+'</b> (visualizador PDF.js integrado — RF11/RF18).','info');
+}
+
+/* ---------- AÇÕES CONTEXTUAIS POR PERFIL/ESTADO ---------- */
+function renderAcoes(p){
+  const box=$('#acoesBox'); box.innerHTML=''; let any=false;
+  const isDono=SESSAO.id===p.despachante_id;
+  const completos=obrigatoriosCompletos(p);
+
+  // Despachante: submeter / editar
+  if(isDono && ['rascunho','aguardando_documentos','rejeitado'].includes(p.status)){
+    any=true;
+    box.innerHTML+=`<p class="small text-muted">${completos?
+      '<span class="text-success"><i class="bi bi-check-circle"></i> Todos os documentos obrigatórios anexados.</span>':
+      '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Faltam documentos obrigatórios.</span>'}</p>
+      <button class="btn btn-primary w-100 mb-2" ${completos?'':'disabled'} onclick="submeter(${p.id})">
+        <i class="bi bi-send-check me-1"></i> Submeter para verificação</button>
+      <button class="btn btn-outline-danger w-100" onclick="cancelar(${p.id})"><i class="bi bi-x-circle me-1"></i> Cancelar processo</button>`;
+  }
+
+  // Verificador
+  if(SESSAO.perfil==='verificador' && p.verificador_id===SESSAO.id && p.status==='em_verificacao'){
+    any=true;
+    box.innerHTML+=`
+      <button class="btn btn-success w-100 mb-2" onclick="aprovarVerif(${p.id})"><i class="bi bi-check2-circle me-1"></i> Aprovar processo</button>
+      <button class="btn btn-warning w-100 mb-2" onclick="pedirDocs(${p.id})"><i class="bi bi-file-earmark-plus me-1"></i> Solicitar documentos adicionais</button>
+      <button class="btn btn-outline-danger w-100" onclick="rejeitar(${p.id})"><i class="bi bi-x-circle me-1"></i> Rejeitar processo</button>`;
+  }
+
+  // Chefe de setor: aprovação final ou devolução
+  if(SESSAO.perfil==='chefe_setor' && p.status==='aprovado_verificador'){
+    any=true;
+    box.innerHTML+=`
+      <button class="btn btn-success w-100 mb-2" onclick="aprovarFinal(${p.id})"><i class="bi bi-patch-check me-1"></i> Conceder aprovação final</button>
+      <button class="btn btn-outline-warning w-100" onclick="devolver(${p.id})"><i class="bi bi-arrow-counterclockwise me-1"></i> Devolver ao verificador</button>`;
+  }
+
+  // Download dossiê (RF34) — autorizados
+  box.innerHTML+=`<hr><button class="btn btn-outline-secondary btn-sm w-100" onclick="baixarDossie(${p.id})">
+     <i class="bi bi-download me-1"></i> Descarregar dossiê (ZIP)</button>`;
+
+  if(!any && p.status==='aprovado_final'){
+    box.insertAdjacentHTML('afterbegin','<div class="alert alert-success py-2 mb-2"><i class="bi bi-patch-check-fill"></i> Processo concluído e aprovado.</div>');
+  }
+}
+
+/* ---------- TRANSIÇÕES DE WORKFLOW ---------- */
+function submeter(pid){ // RF13/RF14
+  const p=DB.processos.find(x=>x.id===pid);
+  if(!obrigatoriosCompletos(p)){toast('Faltam documentos obrigatórios.','danger');return;}
+  p.status='aguardando_distribuicao'; p.data_submissao=now();
+  addHist(p,'Processo submetido para verificação',p.status,'aguardando_distribuicao');
+  log('PROC_SUBMETER','processo',p.id);
+  // recibo digital
+  const docs=docsDoProcesso(p.id);
+  const protocolo='PROT-'+new Date().getFullYear()+'-'+String(p.id).padStart(5,'0');
+  showModal('Recibo de Submissão', `
+    <div class="receipt">
+      SAGDOC — RECIBO DIGITAL DE SUBMISSÃO<br>--------------------------------------<br>
+      Protocolo : <b>${protocolo}</b><br>
+      Nº DU     : ${p.numero_du}<br>
+      Importador: ${impById(p.importador_id).nome}<br>
+      Data/Hora : ${fmtDT(p.data_submissao)}<br>
+      Despachante: ${SESSAO.nome}<br>
+      Documentos (${docs.length}):<br>
+      ${docs.map(d=>' • '+d.nome_arquivo).join('<br>')}<br>
+      --------------------------------------<br>
+      Estado: AGUARDANDO DISTRIBUIÇÃO
+    </div>`);
+  notificar(SESSAO.id,'submissao','Processo submetido',`Recibo ${protocolo} gerado para a DU ${p.numero_du}.`,p.id);
+  // notifica chefes
+  DB.usuarios.filter(u=>u.perfil==='chefe_setor').forEach(ch=>
+    notificar(ch.id,'distribuicao','Processo aguarda distribuição',`${p.numero_du} pronto para distribuir.`,p.id));
+  setTimeout(()=>abrirProcesso(pid),300);
+}
+function cancelar(pid){const p=DB.processos.find(x=>x.id===pid);
+  if(!confirm('Cancelar este processo?'))return;
+  p.status='cancelado';addHist(p,'Processo cancelado pelo despachante',null,'cancelado');
+  log('PROC_CANCELAR','processo',p.id);toast('Processo cancelado.','secondary');abrirProcesso(pid);}
+
+function aprovarVerif(pid){ // RF23 / UC12
+  const p=DB.processos.find(x=>x.id===pid);
+  showPrompt('Parecer técnico','Descreva o parecer de aprovação:',txt=>{
+    if(!txt)return;
+    p.status='aprovado_verificador'; p.parecer=txt; p.data_aprov_verif=now();
+    addHist(p,'Aprovado pelo verificador','em_verificacao','aprovado_verificador',txt);
+    log('PROC_APROVAR_VERIF','processo',p.id);
+    DB.usuarios.filter(u=>u.perfil==='chefe_setor').forEach(ch=>
+      notificar(ch.id,'aprovacao','Processo aguarda aprovação final',`${p.numero_du} aprovado por ${SESSAO.nome}.`,p.id));
+    notificar(p.despachante_id,'aprovacao','Processo aprovado pelo verificador',`${p.numero_du} aguarda aprovação final.`,p.id);
+    toast('Processo aprovado. Chefe de Setor notificado.','success');abrirProcesso(pid);
+  });
+}
+function pedirDocs(pid){ // RF20/RF21
+  const p=DB.processos.find(x=>x.id===pid);
+  showPrompt('Solicitar documentos adicionais','Indique o que é necessário e o prazo:',txt=>{
+    if(!txt)return;
+    p.status='aguardando_documentos'; p.motivo_rejeicao=txt;
+    addHist(p,'Solicitados documentos adicionais','em_verificacao','aguardando_documentos',txt);
+    log('PROC_PEDIR_DOCS','processo',p.id);
+    notificar(p.despachante_id,'solicitacao','Documentos adicionais solicitados',`No processo ${p.numero_du}: ${txt}`,p.id);
+    toast('Solicitação enviada ao despachante.','warning');abrirProcesso(pid);
+  });
+}
+function rejeitar(pid){ // RF24
+  const p=DB.processos.find(x=>x.id===pid);
+  showPrompt('Rejeitar processo','Especifique os motivos de não conformidade:',txt=>{
+    if(!txt)return;
+    p.status='rejeitado'; p.motivo_rejeicao=txt;
+    addHist(p,'Processo rejeitado','em_verificacao','rejeitado',txt);
+    log('PROC_REJEITAR','processo',p.id);
+    notificar(p.despachante_id,'rejeicao','Processo rejeitado',`${p.numero_du}: ${txt}`,p.id);
+    toast('Processo rejeitado e devolvido ao despachante.','danger');abrirProcesso(pid);
+  });
+}
+function aprovarFinal(pid){ // RF25
+  const p=DB.processos.find(x=>x.id===pid);
+  p.status='aprovado_final'; p.data_aprov_final=now();
+  addHist(p,'Aprovação final concedida','aprovado_verificador','aprovado_final');
+  log('PROC_APROVAR_FINAL','processo',p.id);
+  notificar(p.despachante_id,'aprovacao_final','Aprovação final concedida',`O processo ${p.numero_du} foi aprovado.`,p.id);
+  if(p.verificador_id)notificar(p.verificador_id,'aprovacao_final','Processo aprovado pelo chefe',`${p.numero_du} concluído.`,p.id);
+  toast('Aprovação final concedida. Processo concluído.','success');abrirProcesso(pid);
+}
+function devolver(pid){
+  const p=DB.processos.find(x=>x.id===pid);
+  showPrompt('Devolver ao verificador','Motivo da devolução:',txt=>{
+    p.status='em_verificacao'; p.data_aprov_verif=null;
+    addHist(p,'Devolvido ao verificador pelo chefe','aprovado_verificador','em_verificacao',txt||'');
+    if(p.verificador_id)notificar(p.verificador_id,'devolucao','Processo devolvido',`${p.numero_du}: ${txt||'rever'}`,p.id);
+    toast('Processo devolvido ao verificador.','warning');abrirProcesso(pid);
+  });
+}
+function baixarDossie(pid){const p=DB.processos.find(x=>x.id===pid);
+  log('DOC_DOWNLOAD_DOSSIE','processo',p.id);
+  toast(`Dossiê de ${p.numero_du} preparado (${docsDoProcesso(pid).length} documentos) — download ZIP (RF34).`,'info');}
+
+/* ---------- COMUNICAÇÕES ---------- */
+function podeComunicar(p){
+  return [p.despachante_id,p.verificador_id].includes(SESSAO.id) || ['chefe_setor'].includes(SESSAO.perfil);
+}
+function renderChat(p){
+  const box=$('#chatBox');
+  const msgs=DB.comunicacoes.filter(m=>m.processo_id===p.id);
+  if(!msgs.length){box.innerHTML='<p class="text-muted small text-center py-3">Sem mensagens neste processo.</p>';return;}
+  box.innerHTML=msgs.map(m=>{const aut=userById(m.remetente_id);const me=m.remetente_id===SESSAO.id;
+    return `<div class="msg ${me?'me':'them'}">${m.mensagem}
+      <div class="meta">${aut.nome.split(' ')[0]} · ${fmtDT(m.data)}</div></div>`;}).join('');
+  box.scrollTop=box.scrollHeight;
+}
+function enviarMsg(pid){
+  const p=DB.processos.find(x=>x.id===pid);const inp=$('#chatMsg');const txt=inp.value.trim();if(!txt)return;
+  // destinatário = a "outra parte"
+  let dest = SESSAO.id===p.despachante_id ? (p.verificador_id||p.despachante_id) : p.despachante_id;
+  DB.comunicacoes.push({id:++DB.seqCom,processo_id:p.id,remetente_id:SESSAO.id,destinatario_id:dest,
+    data:now(),assunto:'Processo '+p.numero_du,mensagem:txt,lida:false});
+  if(dest!==SESSAO.id)notificar(dest,'mensagem','Nova mensagem',`${SESSAO.nome.split(' ')[0]} no processo ${p.numero_du}.`,p.id);
+  inp.value='';renderChat(p);
+}
+
+/* ---------- TIMELINE ---------- */
+function renderTimeline(p){
+  const box=$('#timeline');
+  const h=DB.historico.filter(x=>x.processo_id===p.id).slice().reverse();
+  box.innerHTML=h.map(x=>{const u=userById(x.usuario_id);
+    return `<li><div class="t-what">${x.acao}</div>
+      <div class="t-who">${u?u.nome:'Sistema'}</div>
+      <div class="t-when">${fmtDT(x.data)}</div>
+      ${x.obs?`<div class="small text-muted fst-italic">"${x.obs}"</div>`:''}</li>`;}).join('');
+}
+
+/* =========================================================================
+   RELATÓRIOS & KPIs (RF40/RF41)
+   ========================================================================= */
+function renderRelatorios(c){
+  pageHead(c,'Relatórios & KPIs','Indicadores de desempenho e exportação de relatórios');
+  const P=DB.processos;
+  const conc=P.filter(p=>p.data_aprov_final).map(p=>horas(p.data_submissao,p.data_aprov_final));
+  const media=conc.length?(conc.reduce((a,b)=>a+b,0)/conc.length).toFixed(1):'0';
+  const dentroSLA=P.filter(p=>p.data_aprov_final).filter(p=>horas(p.data_submissao,p.data_aprov_final)<=(CONFIG.sla_verificacao_h+CONFIG.sla_aprovacao_chefe_h+CONFIG.sla_distribuicao_h)).length;
+  const totalConc=conc.length||1;
+  const rej=P.filter(p=>p.status==='rejeitado').length;
+  const row=el('div','row g-3 mb-4');
+  row.innerHTML=`
+    <div class="col-6 col-lg-3">${statCard('bi-stopwatch','#0b3d68',media+'h','Tempo médio tramitação')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-speedometer','#1e7e42',((dentroSLA/totalConc)*100).toFixed(0)+'%','Dentro do SLA')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-arrow-repeat','#b8860b',rej,'Retrabalho / rejeições')}</div>
+    <div class="col-6 col-lg-3">${statCard('bi-files','#12558f',P.length,'Processos totais')}</div>`;
+  c.appendChild(row);
+
+  // relatório por despachante
+  const desps=DB.usuarios.filter(u=>u.perfil==='despachante');
+  const tabD=desps.map(d=>{const ps=P.filter(p=>p.despachante_id===d.id);
+    return `<tr><td>${d.nome}</td><td>${ps.length}</td>
+      <td>${ps.filter(p=>p.status==='aprovado_final').length}</td>
+      <td>${ps.filter(p=>p.status==='rejeitado').length}</td></tr>`;}).join('');
+  const verifs=DB.usuarios.filter(u=>u.perfil==='verificador');
+  const tabV=verifs.map(v=>{const ps=P.filter(p=>p.verificador_id===v.id);
+    const t=ps.filter(p=>p.data_aprov_verif).map(p=>horas(p.data_distribuicao||p.data_submissao,p.data_aprov_verif));
+    const m=t.length?(t.reduce((a,b)=>a+b,0)/t.length).toFixed(1):'—';
+    return `<tr><td>${v.nome}</td><td>${ps.length}</td><td>${m}h</td></tr>`;}).join('');
+
+  const cards=el('div','row g-3');
+  cards.innerHTML=`
+   <div class="col-lg-6"><div class="card-soft card h-100">
+     <div class="card-header d-flex justify-content-between">Relatório por despachante
+       <button class="btn btn-sm btn-outline-primary" onclick="exportar('despachantes')"><i class="bi bi-download"></i> PDF/Excel</button></div>
+     <div class="card-body p-0"><table class="table tbl mb-0"><thead><tr><th>Despachante</th><th>Total</th><th>Aprovados</th><th>Rejeitados</th></tr></thead><tbody>${tabD}</tbody></table></div></div></div>
+   <div class="col-lg-6"><div class="card-soft card h-100">
+     <div class="card-header d-flex justify-content-between">Desempenho de verificadores
+       <button class="btn btn-sm btn-outline-primary" onclick="exportar('verificadores')"><i class="bi bi-download"></i> PDF/Excel</button></div>
+     <div class="card-body p-0"><table class="table tbl mb-0"><thead><tr><th>Verificador</th><th>Processos</th><th>Tempo médio</th></tr></thead><tbody>${tabV}</tbody></table></div></div></div>`;
+  c.appendChild(cards);
+}
+function exportar(rel){log('RELATORIO_EXPORT','relatorio',0,rel);toast('Relatório "'+rel+'" exportado (PDF/Excel — RF40).','info');}
+
+/* =========================================================================
+   ADMINISTRAÇÃO (RF42/RF44/RF45/RF46)
+   ========================================================================= */
+function renderUtilizadores(c){
+  pageHead(c,'Gestão de Utilizadores','Criar, editar e desativar utilizadores e perfis (RBAC)');
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-header d-flex justify-content-between align-items-center">Utilizadores do sistema
+     <button class="btn btn-sm btn-primary" onclick="toast('Formulário de novo utilizador (RF45).','info')"><i class="bi bi-person-plus"></i> Novo</button></div>
+    <div class="card-body p-0"><table class="table tbl mb-0">
+     <thead><tr><th>Nome</th><th>Utilizador</th><th>Email</th><th>Perfil</th><th>Estado</th><th></th></tr></thead>
+     <tbody>${DB.usuarios.map(u=>`<tr><td>${u.nome}</td><td>${u.username}</td><td>${u.email}</td>
+        <td><span class="badge bg-secondary">${perfilLabel(u.perfil)}</span></td>
+        <td><span class="badge bg-success">Ativo</span></td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-secondary" onclick="toast('Editar utilizador ${u.nome}.','info')"><i class="bi bi-pencil"></i></button></td></tr>`).join('')}
+     </tbody></table></div>`;
+  c.appendChild(card);
+}
+function renderTiposDoc(c){
+  pageHead(c,'Tipos de Documento','Documentos e a que categorias de mercadoria são obrigatórios (RF42/RF43)');
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-body p-0"><table class="table tbl mb-0">
+     <thead><tr><th>Documento</th><th>Formatos</th><th>Obrigatório para</th></tr></thead>
+     <tbody>${TIPOS_DOC.map(t=>`<tr><td>${t.nome}</td><td>PDF, JPG, PNG</td>
+        <td>${t.obrig.includes('*')?'<span class="badge bg-danger">Todas as categorias</span>':
+             (t.obrig.length?t.obrig.map(x=>`<span class="badge bg-secondary me-1">${x}</span>`).join(''):'<span class="text-muted">Opcional</span>')}</td></tr>`).join('')}
+     </tbody></table></div>`;
+  c.appendChild(card);
+}
+function renderSLA(c){
+  pageHead(c,'Configuração de SLA','Tempos-alvo por fase do processo (RF44 / RN11)');
+  const card=el('div','card-soft card'); card.style.maxWidth='560px';
+  card.innerHTML=`<div class="card-body">
+    <div class="mb-3"><label class="form-label">Prazo de distribuição (horas)</label>
+      <input type="number" class="form-control" id="sla1" value="${CONFIG.sla_distribuicao_h}"></div>
+    <div class="mb-3"><label class="form-label">Prazo de verificação (horas)</label>
+      <input type="number" class="form-control" id="sla2" value="${CONFIG.sla_verificacao_h}"></div>
+    <div class="mb-3"><label class="form-label">Prazo de aprovação do chefe (horas)</label>
+      <input type="number" class="form-control" id="sla3" value="${CONFIG.sla_aprovacao_chefe_h}"></div>
+    <div class="mb-3"><label class="form-label">Tamanho máximo de ficheiro (MB)</label>
+      <input type="number" class="form-control" id="sla4" value="${CONFIG.tam_max_mb}"></div>
+    <button class="btn btn-primary" onclick="guardarSLA()"><i class="bi bi-save me-1"></i> Guardar configuração</button></div>`;
+  c.appendChild(card);
+}
+function guardarSLA(){
+  CONFIG.sla_distribuicao_h=+$('#sla1').value; CONFIG.sla_verificacao_h=+$('#sla2').value;
+  CONFIG.sla_aprovacao_chefe_h=+$('#sla3').value; CONFIG.tam_max_mb=+$('#sla4').value;
+  log('CONFIG_SLA','configuracoes',0);toast('Configuração de SLA guardada.','success');
+}
+function renderLogs(c){
+  pageHead(c,'Logs de Auditoria','Registo detalhado de operações sensíveis (RF05/RF46)');
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-body p-0"><table class="table tbl mb-0" style="font-size:12.5px">
+     <thead><tr><th>Data/Hora</th><th>Utilizador</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Detalhes</th></tr></thead>
+     <tbody>${DB.logs.slice(0,120).map(l=>{const u=l.usuario_id?userById(l.usuario_id):null;
+        return `<tr><td>${fmtDT(l.data)}</td><td>${u?u.nome:'—'}</td>
+          <td><code>${l.acao}</code></td><td>${l.entidade||''} ${l.id_entidade||''}</td>
+          <td>${l.ip||''}</td><td class="text-muted">${l.detalhes||''}</td></tr>`;}).join('')}
+     </tbody></table></div>`;
+  c.appendChild(card);
+}
+
+/* ---------- NOTIFICAÇÕES ---------- */
+function renderNotifPanel(){
+  const list=$('#notifList');
+  const ns=DB.notificacoes.filter(n=>n.usuario_id===SESSAO.id);
+  if(!ns.length){list.innerHTML='<p class="text-muted text-center py-4">Sem notificações.</p>';return;}
+  list.innerHTML=ns.map(n=>`<div class="d-flex gap-2 py-2 border-bottom ${n.lida?'opacity-50':''}"
+      role="button" onclick="abrirNotif(${n.id},${n.link})">
+     <i class="bi bi-dot fs-3 ${n.lida?'text-muted':'text-primary'}"></i>
+     <div><div class="fw-semibold" style="font-size:13.5px">${n.titulo}</div>
+       <div class="small text-muted">${n.mensagem}</div>
+       <div class="small text-muted">${fmtDT(n.data)}</div></div></div>`).join('');
+}
+function abrirNotif(nid,link){
+  const n=DB.notificacoes.find(x=>x.id===nid); n.lida=true; refreshNotifBadge();
+  bootstrap.Offcanvas.getInstance('#notifPanel').hide();
+  if(link) abrirProcesso(link);
+}
+function renderNotificacoesPage(c){
+  pageHead(c,'Notificações','Eventos relevantes dos seus processos (RF30)');
+  const ns=DB.notificacoes.filter(n=>n.usuario_id===SESSAO.id);
+  const card=el('div','card-soft card');
+  card.innerHTML=`<div class="card-body">${ns.length?ns.map(n=>`
+     <div class="d-flex gap-2 py-2 border-bottom ${n.lida?'opacity-50':''}" role="button" onclick="abrirNotif(${n.id},${n.link})">
+       <i class="bi bi-bell${n.lida?'':'-fill'} text-primary"></i>
+       <div><div class="fw-semibold">${n.titulo}</div><div class="small text-muted">${n.mensagem} · ${fmtDT(n.data)}</div></div>
+     </div>`).join(''):'<p class="text-muted text-center py-4">Sem notificações.</p>'}</div>`;
+  c.appendChild(card);
+}
+
+/* ---------- MODAIS GENÉRICOS ---------- */
+function showModal(titulo,corpo){
+  const id='m'+Date.now();
+  const m=el('div','modal fade',`<div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-azul text-white"><h5 class="modal-title">${titulo}</h5>
+      <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">${corpo}</div>
+    <div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal">Fechar</button></div>
+    </div></div>`);
+  m.id=id;document.body.appendChild(m);const bs=new bootstrap.Modal(m);bs.show();
+  m.addEventListener('hidden.bs.modal',()=>m.remove());
+}
+function showPrompt(titulo,label,cb){
+  const id='p'+Date.now();
+  const m=el('div','modal fade',`<div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-azul text-white"><h5 class="modal-title">${titulo}</h5>
+      <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body"><label class="form-label">${label}</label>
+      <textarea class="form-control" id="pt${id}" rows="4"></textarea></div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button class="btn btn-primary" id="ok${id}">Confirmar</button></div></div></div>`);
+  m.id=id;document.body.appendChild(m);const bs=new bootstrap.Modal(m);bs.show();
+  m.querySelector('#ok'+id).addEventListener('click',()=>{const v=m.querySelector('#pt'+id).value.trim();bs.hide();cb(v);});
+  m.addEventListener('hidden.bs.modal',()=>m.remove());
+}
+
+/* =========================================================================
+   SEED — dados de demonstração para percorrer todo o fluxo
+   ========================================================================= */
+(function seed(){
+  const daysAgo=n=>{const d=new Date();d.setHours(d.getHours()-n);return d;};
+  function crear(du,dispId,impId,cat,reg,status,verifId){
+    const p={id:++DB.seqProc,numero_du:du,despachante_id:dispId,importador_id:impId,categoria:cat,regime:reg,
+      observacoes:'',status,verificador_id:verifId||null,
+      data_criacao:daysAgo(120),data_submissao:null,data_distribuicao:null,data_aprov_verif:null,data_aprov_final:null,
+      parecer:null,motivo_rejeicao:null};
+    DB.processos.push(p);
+    DB.historico.push({id:++DB.seqHist,processo_id:p.id,usuario_id:dispId,data:daysAgo(120),acao:'Processo criado (rascunho)',status_novo:'rascunho',obs:''});
+    // anexar todos os obrigatórios
+    checklistFor(cat).filter(x=>x.obrigatorio).forEach(x=>{
+      DB.documentos.push({id:++DB.seqDoc,processo_id:p.id,tipo_documento_id:x.tipo_id,
+        nome_arquivo:x.nome.replace(/[^\wÀ-ú]+/g,'_')+'_'+du.replace('/','-')+'.pdf',
+        tamanho_bytes:450000,hash:'sha256:seed',data_upload:daysAgo(119),upload_por:dispId,verificado:status!=='rascunho'});
+    });
+    if(status!=='rascunho'){p.data_submissao=daysAgo(110);
+      DB.historico.push({id:++DB.seqHist,processo_id:p.id,usuario_id:dispId,data:daysAgo(110),acao:'Processo submetido para verificação',status_novo:'aguardando_distribuicao'});}
+    if(verifId){p.data_distribuicao=daysAgo(108);
+      DB.historico.push({id:++DB.seqHist,processo_id:p.id,usuario_id:5,data:daysAgo(108),acao:'Distribuído (automático)',status_novo:'em_verificacao'});}
+    if(['aprovado_verificador','aprovado_final'].includes(status)){p.data_aprov_verif=daysAgo(60);p.parecer='Documentação conforme. Sem irregularidades.';
+      DB.historico.push({id:++DB.seqHist,processo_id:p.id,usuario_id:verifId,data:daysAgo(60),acao:'Aprovado pelo verificador',status_novo:'aprovado_verificador',obs:p.parecer});}
+    if(status==='aprovado_final'){p.data_aprov_final=daysAgo(50);
+      DB.historico.push({id:++DB.seqHist,processo_id:p.id,usuario_id:5,data:daysAgo(50),acao:'Aprovação final concedida',status_novo:'aprovado_final'});}
+    if(status==='rejeitado'){p.motivo_rejeicao='Fatura comercial ilegível; reenviar.';p.data_distribuicao=daysAgo(70);
+      DB.historico.push({id:++DB.seqHist,processo_id:p.id,usuario_id:verifId||3,data:daysAgo(65),acao:'Processo rejeitado',status_novo:'rejeitado',obs:p.motivo_rejeicao});}
+    return p;
+  }
+  crear('2025/001234',1,1,'Alimentos','Importação Definitiva','aprovado_final',3);
+  crear('2025/001240',1,2,'Têxteis','Importação Definitiva','em_verificacao',3);
+  crear('2025/001255',1,3,'Medicamentos','Importação Definitiva','aguardando_documentos',3);
+  crear('2025/001260',2,4,'Vegetais','Exportação','aprovado_verificador',4);
+  crear('2025/001270',2,1,'Electrónicos','Importação Definitiva','aguardando_distribuicao');
+  crear('2025/001281',1,2,'Químicos','Entreposto Aduaneiro','rejeitado',4);
+  crear('2025/001290',2,3,'Geral','Trânsito','aprovado_final',4);
+  crear('2025/001299',1,4,'Animais','Admissão Temporária','rascunho');
+  // pedido de docs no 001255
+  const p255=DB.processos.find(p=>p.numero_du==='2025/001255');
+  p255.motivo_rejeicao='Falta Licença de Importação do Ministério da Saúde. Prazo: 5 dias.';
+  DB.comunicacoes.push({id:++DB.seqCom,processo_id:p255.id,remetente_id:3,destinatario_id:1,data:daysAgo(20),
+    assunto:'Processo 2025/001255',mensagem:'Por favor anexe a Licença de Importação em falta.',lida:true});
+  DB.notificacoes.unshift({id:++DB.seqNot,usuario_id:1,tipo:'solicitacao',titulo:'Documentos adicionais solicitados',
+    mensagem:'No processo 2025/001255: Licença de Importação em falta.',link:p255.id,data:daysAgo(20),lida:false});
+})();
+</script>
+</body>
+</html>

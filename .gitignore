@@ -1,0 +1,29 @@
+# Ambiente / segredos
+.env
+
+# Dependências (reproduzíveis via composer.lock)
+/vendor/
+composer.phar
+
+# Uploads de utilizadores (nunca versionar documentos submetidos)
+/public/uploads/*
+!/public/uploads/.htaccess
+
+# Ficheiros gerados / logs / backups
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/temp/*
+!/storage/temp/.gitkeep
+
+# Testes
+/.phpunit.cache/
+/.phpunit.result.cache
+
+# IDE / SO / ferramentas locais
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
